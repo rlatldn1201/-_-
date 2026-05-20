@@ -195,7 +195,7 @@ select:focus { border-color: #aaa; }
       <div class="shaft-line" style="top:70%"></div>
       <div class="shaft-line" style="top:80%"></div>
       <div class="shaft-line" style="top:90%"></div>
-      <div class="cab" id="elevator">🏢</div>
+      <div class="cab" id="elevator">🛗</div>
     </div>
 
     <div class="info-row">
@@ -240,6 +240,13 @@ select:focus { border-color: #aaa; }
   let currentFloor = possibleFloors[Math.floor(Math.random() * possibleFloors.length)];
   document.getElementById("currentFloor").textContent = currentFloor;
 
+  // 층 번호 → shaft 내 bottom px 계산
+  function floorToBottom(floor, shaftH) {
+    const cabH = 60;
+    const usable = shaftH - cabH - 20;
+    return 10 + (floor - 1) * (usable / 9);
+  }
+
   function showScreen(id) {
     ["screen1", "screen2", "screen3"].forEach(s => {
       document.getElementById(s).classList.remove("active");
@@ -254,20 +261,23 @@ select:focus { border-color: #aaa; }
 
     showScreen("screen2");
 
+    const elevator = document.getElementById("elevator");
     const shaftH = document.getElementById("shaft").clientHeight;
-    const cabH = 60;
-    const usable = shaftH - cabH - 20;
-    const bottomOffset = (targetFloor - 1) * (usable / 9);
+
+    // 현재 층 위치에서 시작 (transition 없이 즉시 배치)
+    elevator.style.transition = "none";
+    elevator.style.bottom = floorToBottom(currentFloor, shaftH) + "px";
 
     const floorDiff = Math.abs(targetFloor - currentFloor);
     const time = Math.ceil(floorDiff * 1.5);
 
     document.getElementById("arrivalTime").textContent = time;
+    document.getElementById("movingFloor").textContent = currentFloor;
 
-    const elevator = document.getElementById("elevator");
-    elevator.style.transitionDuration = time + "s";
+    // 한 프레임 뒤에 transition 켜고 목적지로 이동
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      elevator.style.bottom = (10 + bottomOffset) + "px";
+      elevator.style.transition = "bottom " + time + "s linear";
+      elevator.style.bottom = floorToBottom(targetFloor, shaftH) + "px";
     }));
 
     let remaining = time;
